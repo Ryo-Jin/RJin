@@ -48,11 +48,11 @@ button,input,select,textarea{font:inherit}
 h1,.tab,.pageBtn,.modeBtn,.nav button{font-family:inherit}
 
 
-#pageBtns{
+#pages{
   grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:12px;
 }
-#pageBtns .pageBtn{
+#pages .pageBtn{
   width:100%;
 }
 
@@ -89,10 +89,6 @@ function makeOrder(){order=items().map((_,i)=>i); if(shuffled) order.sort(()=>Ma
 function currentItem(){const arr=items(); return arr[order[idx]]}
 function setStudyChrome(visible){$('.tools').classList.toggle('hiddenForSpecial',!visible); $('.stats').classList.toggle('hiddenForSpecial',!visible); $('.nav').classList.toggle('hiddenForSpecial',!visible); $('.bottom').classList.toggle('hiddenForSpecial',!visible);}
 function renderPages(){
-  if(book==='eju-kanji'){
-    $('#pages').innerHTML=EJU_KANJI.map((p,i)=>`<button class="pageBtn ${i===page?'active':''}" data-page="${i}">${p.title}</button>`).join('');
-    $$('.pageBtn').forEach(b=>b.onclick=()=>{page=+b.dataset.page;render();}); return;
-  }
   $('#pages').innerHTML=pages().map((p,i)=>`<button class="pageBtn ${i===page?'active':''}" data-page="${i}">${p.title} <small>(${p.items.length})</small></button>`).join('');
   $$('.pageBtn').forEach(b=>b.onclick=()=>{page=+b.dataset.page; makeOrder(); render();});
 }
@@ -101,32 +97,7 @@ function renderCard(){const arr=items(); if(!arr.length){$('#card').innerHTML='<
 function renderTable(){const pItems=pages()[page]?.items||[]; if(!pItems.length){$('#card').innerHTML='<div class="empty">데이터 없음</div>'; return} $('#card').style.alignItems='stretch'; $('#card').style.justifyContent='flex-start'; $('#card').innerHTML=`<div style="overflow:auto;width:100%;max-height:420px"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th>✓</th><th>단어</th><th>읽기</th><th>뜻</th></tr></thead><tbody>${pItems.map((it,i)=>`<tr style="border-top:1px solid #e5e7eb"><td><input type="checkbox" data-ti="${i}" ${isKnown(book,page,i)?'checked':''}></td><td style="font-weight:580;font-size:20px;letter-spacing:.04em;font-feature-settings:&quot;palt&quot; 1;padding:10px 6px">${it.word}</td><td style="color:#09569a;font-weight:560;letter-spacing:.02em;padding:10px 6px">${it.reading}</td><td style="font-weight:580;padding:10px 6px">${it.meaning}</td></tr>`).join('')}</tbody></table></div>`; $$('input[data-ti]').forEach(c=>c.onchange=()=>{setKnown(book,page,+c.dataset.ti,c.checked); renderStats();})}
 function renderKanji(){}
 
-function renderPageButtons(){
-  const wrap = document.getElementById('pageBtns');
-  if(!wrap) return;
-  const pages = DATA[book] || [];
-  wrap.innerHTML = '';
-  if(pages.length <= 1){
-    wrap.style.display = 'none';
-    return;
-  }
-  wrap.style.display = 'grid';
-  pages.forEach((pg, idx)=>{
-    const btn = document.createElement('button');
-    btn.className = 'pageBtn' + (idx === page ? ' active' : '');
-    btn.textContent = pg.title || `${idx+1}회차`;
-    btn.addEventListener('click', ()=>{
-      page = idx;
-      cursor = 0;
-      savePrefs?.();
-      render();
-    });
-    wrap.appendChild(btn);
-  });
-}
-
-function render(){
-  renderPageButtons();renderPages(); if(isSpecial()){setStudyChrome(false); $('#card').removeAttribute('style'); renderKanji(); return;} setStudyChrome(true); renderStats(); $('#card').className='card'; $('#card').removeAttribute('style'); if(mode==='card') renderCard(); else renderTable(); $('#hide').classList.toggle('on',hidden); $('#hide').textContent=hidden?'뜻 가리기 ON':'뜻 보이기 ON'; $('#unknownOnly').classList.toggle('on',unknownOnly);}
+function render(){renderPages(); if(isSpecial()){setStudyChrome(false); $('#card').removeAttribute('style'); renderKanji(); return;} setStudyChrome(true); renderStats(); $('#card').className='card'; $('#card').removeAttribute('style'); if(mode==='card') renderCard(); else renderTable(); $('#hide').classList.toggle('on',hidden); $('#hide').textContent=hidden?'뜻 가리기 ON':'뜻 보이기 ON'; $('#unknownOnly').classList.toggle('on',unknownOnly);}
 $('.tabs').onclick=e=>{if(e.target.dataset.book){book=e.target.dataset.book; page=0; idx=0; $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.book===book)); if(!isSpecial())makeOrder(); render();}}
 $('#card').onclick=e=>{if(!isSpecial()&&mode==='card'&&!e.target.closest('a')){hidden=!hidden; renderCard();}}; $('#hide').onclick=()=>{hidden=!hidden; render();}; $('#shuffle').onclick=()=>{shuffled=!shuffled; $('#shuffle').classList.toggle('on',shuffled); makeOrder(); render();}; $('#unknownOnly').onclick=()=>{unknownOnly=!unknownOnly; makeOrder(); render();};
 $('#reset').onclick=()=>{(pages()[page]?.items||[]).forEach((_,i)=>setKnown(book,page,i,false)); makeOrder(); render();};
